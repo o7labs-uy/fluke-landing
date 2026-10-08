@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es" data-theme="dark" data-bg="costa">
+<html lang="es" data-theme="light" data-bg="costa">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -66,42 +66,43 @@ nav { display: flex; align-items: center; gap: 32px; height: 72px; }
 /* Hero */
 .hero { position: relative; isolation: isolate; padding: 72px 0 0; overflow: hidden; }
 .motif { position: absolute; inset: 0; z-index: -1; pointer-events: none; color: var(--motif); }
+.motif svg { position: absolute; display: none; fill: none; stroke: currentColor; }
+:root[data-bg="fluke"] .motif-fluke { display: block; }
 .motif-fluke, .map .land { opacity: var(--motif-op); }
+/* Mapa único, fijo detrás de toda la página; la cámara la mueve el JS según el scroll. */
+#world { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;
+  color: var(--motif); fill: none; stroke: currentColor; stroke-width: 1; }
+:root:not([data-bg="costa"]) #world { display: none; }
+#world path { vector-effect: non-scaling-stroke; stroke-width: 1.25; }
 /* Coordenadas y ruta un poco más presentes que la costa, para que se lean como mapa. */
 .map .coords { opacity: calc(var(--motif-op) * 2.6); }
 .map .route { opacity: calc(var(--motif-op) * 2.2); }
-.map text { fill: currentColor; stroke: none; font: 10px var(--mono); letter-spacing: .04em; }
-.map .route > use { stroke-dasharray: 0 7; stroke-width: 1.6; }
+.map text { fill: currentColor; stroke: none; font: var(--fs, 9px) var(--mono); letter-spacing: .04em; }
+#world #route { stroke-dasharray: 0 6; stroke-width: 1.4; }
 .map .whale { fill: currentColor; stroke: none; }
-/* El mapa sigue hacia el sur detrás de las secciones: Argentina, Península Valdés, Malvinas. */
-.south { position: relative; isolation: isolate; overflow: hidden; }
-.south-map { position: absolute; z-index: -1; left: 50%; top: 0; width: 1800px; transform: translateX(-50%);
-  color: var(--motif); fill: none; stroke: currentColor; pointer-events: none;
-  -webkit-mask: linear-gradient(transparent, #000 4%, #000 90%, transparent);
-          mask: linear-gradient(transparent, #000 4%, #000 90%, transparent); }
-:root:not([data-bg="costa"]) .south-map { display: none; }
-.motif svg { position: absolute; display: none; fill: none; stroke: currentColor; vector-effect: non-scaling-stroke; }
-:root[data-bg="costa"] .motif-costa,
-:root[data-bg="fluke"] .motif-fluke { display: block; }
-/* Perfil de la costa: Colonia → Montevideo → Punta del Este → Chuy. */
-.motif-costa { left: 50%; top: 40px; width: max(1600px, 115vw); transform: translateX(-50%);
-  -webkit-mask: linear-gradient(90deg, transparent, #000 10%, #000 92%, transparent);
-          mask: linear-gradient(90deg, transparent, #000 10%, #000 92%, transparent); }
 /* Tres olas desfasadas 3 s: cada una sube desde el mar, se corta en espuma y desaparece al tocar la costa. */
-.motif-costa .swell { opacity: 0; stroke-dasharray: 90 26 18 26; animation: swell 9s cubic-bezier(.35, 0, .45, 1) infinite; }
-.motif-costa .foam { opacity: 0; stroke-width: 2; stroke-dasharray: 2 12; animation: foam 3s ease-out infinite; animation-delay: -1.8s; }
+.map .swell { opacity: 0; stroke-dasharray: 60 18 12 18; animation: swell 9s cubic-bezier(.35, 0, .45, 1) infinite; }
+.map .foam { opacity: 0; stroke-width: 1.6; stroke-dasharray: 1.5 8; animation: foam 3s ease-out infinite; animation-delay: -1.8s; }
 @keyframes swell {
-  0%   { transform: translateY(54px); opacity: 0; stroke-dashoffset: 0; }
+  0%   { transform: translate(var(--dx, 0), var(--dy, 36px)); opacity: 0; stroke-dashoffset: 0; }
   30%  { opacity: .5; }
-  80%  { transform: translateY(4px); opacity: .7; stroke-dasharray: 90 26 18 26; }
-  100% { transform: translateY(0); opacity: 0; stroke-dasharray: 6 14 2 14; stroke-dashoffset: -60; }
+  80%  { transform: translate(calc(var(--dx, 0) * .08), calc(var(--dy, 36px) * .08)); opacity: .7; stroke-dasharray: 60 18 12 18; }
+  100% { transform: translate(0, 0); opacity: 0; stroke-dasharray: 4 10 1.5 10; stroke-dashoffset: -40; }
+}
+/* Islas: la ola es la silueta agrandada que se achica hasta la orilla. */
+.map .ring { transform-box: fill-box; transform-origin: center; animation-name: ring; }
+@keyframes ring {
+  0%   { transform: scale(1.35); opacity: 0; stroke-dashoffset: 0; }
+  30%  { opacity: .5; }
+  80%  { transform: scale(1.03); opacity: .7; stroke-dasharray: 60 18 12 18; }
+  100% { transform: scale(1); opacity: 0; stroke-dasharray: 4 10 1.5 10; stroke-dashoffset: -40; }
 }
 @keyframes foam {
   0%, 35% { opacity: 0; stroke-dashoffset: 0; }
   65%      { opacity: .9; }
-  100%     { opacity: 0; stroke-dashoffset: -14; }
+  100%     { opacity: 0; stroke-dashoffset: -10; }
 }
-@media (prefers-reduced-motion: reduce) { .motif-costa .swell, .motif-costa .foam, .map .whale { animation: none; display: none; } }
+@media (prefers-reduced-motion: reduce) { .map .swell, .map .foam { animation: none; display: none; } }
 /* Fluke enorme y cortado por el borde derecho. */
 .motif-fluke { right: -380px; top: -40px; width: 1100px; transform: rotate(-12deg);
   -webkit-mask: linear-gradient(200deg, #000 30%, transparent 75%);
@@ -291,6 +292,8 @@ tr:last-child td { border-bottom: 0; }
 h2 { font: 600 clamp(30px, 4.6vw, 46px)/1.08 'Space Grotesk'; letter-spacing: -.02em; text-wrap: balance; }
 .sub { margin-top: 16px; font-size: 18px; color: var(--muted); text-wrap: pretty; }
 .surface { background: color-mix(in srgb, var(--panel) 72%, transparent); border: 1px solid var(--line); border-radius: 12px; }
+/* Lo translúcido difumina el mapa que pasa por detrás, para que no distraiga. */
+.surface, .agents span, .draft { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
 
 .agents-sec { padding: 72px 0 24px; text-align: center; }
 .agents-sec p { color: var(--muted); font-size: 15px; }
@@ -387,6 +390,92 @@ footer .geo { margin-left: auto; font-family: var(--mono); font-size: 12px; }
 </style>
 </head>
 <body>
+<!-- Un solo mapa detrás de toda la página. X = (lon + 70) * 157.6, Y = (-lat - 26.5) * 200. El JS mueve la cámara con el scroll. -->
+<svg id="world" class="map" aria-hidden="true" stroke-linejoin="round" stroke-linecap="round">
+  <defs><!-- Guía de la leyenda: paralela al tramo brasileño de la ruta, dibujada de sur a norte para que el texto se lea al derecho. -->
+    <path id="route-label" d="M2585,1580 L2760,1350"/>
+    <path id="c-uy" d="M1915,1594 L1938,1590 L1959,1583 L1981,1586 L1999,1592 L2017,1600 L2034,1612 L2049,1624 L2070,1633 L2091,1640 L2114,1651 L2135,1660 L2151,1660 L2160,1668 L2167,1676 L2173,1678 L2178,1684 L2181,1688 L2186,1684 L2191,1682 L2202,1678 L2213,1673 L2222,1666 L2234,1660 L2244,1656 L2259,1657 L2277,1658 L2295,1662 L2309,1668 L2318,1673 L2321,1676 L2338,1680 L2356,1684 L2364,1680 L2369,1688 L2372,1694 L2377,1690 L2388,1682 L2403,1677 L2422,1670 L2438,1663 L2451,1656 L2465,1645 L2477,1636 L2487,1633 L2496,1634 L2506,1628 L2514,1620 L2525,1608 L2537,1596 L2548,1588 L2556,1580 L2563,1571 L2569,1560 L2577,1541 L2585,1524 L2594,1508 L2601,1493 L2608,1480 L2615,1465 L2621,1450"/>
+    <path id="c-br" d="M2621,1450 L2663,1400 L2726,1300 L2774,1210 L2823,1130 L2884,1050 L2955,990 L3010,920 L3065,840 L3105,780 L3132,696 L3168,624 L3195,568 L3247,500 L3310,440 L3344,396 L3362,346 L3369,306 L3381,270 L3401,220 L3392,140"/>
+    <path id="c-plata" d="M1833,1620 L1857,1640 L1907,1670 L1970,1710 L2025,1790"/>
+    <path id="c-samborombon" d="M2025,1790 L1997,1840 L1989,1884 L2009,1930 L2049,1954 L2088,1960 L2096,1990 L2099,2044 L2072,2122 L2057,2152 L2025,2190 L1986,2244 L1965,2300"/>
+    <path id="c-bonaerense" d="M1965,2300 L1916,2354 L1775,2412 L1655,2450 L1565,2472 L1371,2500 L1261,2490 L1221,2460"/>
+    <path id="c-patagonia" d="M1221,2460 L1245,2520 L1245,2580 L1214,2670 L1237,2760 L1229,2810 L1198,2880 L1135,2906 L1040,2930 L946,2920 L820,2860 L772,2900 L788,3020 L812,3110 L859,3150 L890,3170 L875,3190 L914,3150 L946,3126 L985,3114 L1009,3160 L1012,3210 L1004,3254 L961,3270 L922,3230 L901,3214 L875,3204 L827,3210 L783,3254 L796,3290 L895,3294 L851,3330 L780,3360 L756,3440 L760,3510 L709,3600 L678,3660 L701,3684 L646,3710 L536,3730 L410,3820 L397,3872 L391,3988 L504,4080 L678,4120 L646,4250 L552,4400 L362,4560 L284,4700 L268,4720 L165,5020 L260,5166"/>
+    <path id="c-tdf" d="M221,5230 L284,5310 L362,5460 L536,5600 L756,5640 L725,5690 L504,5690 L221,5680"/>
+    <path id="c-gm" d="M1371,5000 L1481,4950 L1592,4970 L1639,5040 L1600,5140 L1513,5140 L1403,5080 Z"/>
+    <path id="c-so" d="M1671,4980 L1812,4960 L1931,5010 L1875,5070 L1828,5150 L1734,5170 L1686,5100 L1718,5050 Z"/>
+    <path id="c-sg" d="M5035,5500 L5106,5510 L5169,5506 L5232,5530 L5287,5554 L5327,5590 L5374,5620 L5390,5664 L5343,5676 L5295,5644 L5232,5600 L5169,5560 L5106,5540 L5043,5520 Z"/></defs>
+  <g id="cam">
+    <g class="land">
+      <path d="M1899,980 L1883,1060 L1868,1160 L1875,1260 L1852,1350 L1825,1440 L1825,1476 L1845,1500 L1886,1534 L1915,1594 L1938,1590 L1959,1583 L1981,1586 L1999,1592 L2017,1600 L2034,1612 L2049,1624 L2070,1633 L2091,1640 L2114,1651 L2135,1660 L2151,1660 L2160,1668 L2167,1676 L2173,1678 L2178,1684 L2181,1688 L2186,1684 L2191,1682 L2202,1678 L2213,1673 L2222,1666 L2234,1660 L2244,1656 L2259,1657 L2277,1658 L2295,1662 L2309,1668 L2318,1673 L2321,1676 L2338,1680 L2356,1684 L2364,1680 L2369,1688 L2372,1694 L2377,1690 L2388,1682 L2403,1677 L2422,1670 L2438,1663 L2451,1656 L2465,1645 L2477,1636 L2487,1633 L2496,1634 L2506,1628 L2514,1620 L2525,1608 L2537,1596 L2548,1588 L2556,1580 L2563,1571 L2569,1560 L2577,1541 L2585,1524 L2594,1508 L2601,1493 L2608,1480 L2615,1465 L2621,1450 L2663,1400 L2726,1300 L2774,1210 L2823,1130 L2884,1050 L2955,990 L3010,920 L3065,840 L3105,780 L3132,696 L3168,624 L3195,568 L3247,500 L3310,440 L3344,396 L3362,346 L3369,306 L3381,270 L3401,220 L3392,140"/>
+      <path d="M1466,1220 L1477,1290 L1529,1340 L1608,1390 L1671,1450 L1726,1510 L1773,1550 L1800,1580 L1816,1600 L1833,1620 L1857,1640 L1907,1670 L1970,1710 L2025,1790 L1997,1840 L1989,1884 L2009,1930 L2049,1954 L2088,1960 L2096,1990 L2099,2044 L2072,2122 L2057,2152 L2025,2190 L1986,2244 L1965,2300 L1916,2354 L1775,2412 L1655,2450 L1565,2472 L1371,2500 L1261,2490 L1221,2460 L1245,2520 L1245,2580 L1214,2670 L1237,2760 L1229,2810 L1198,2880 L1135,2906 L1040,2930 L946,2920 L820,2860 L772,2900 L788,3020 L812,3110 L859,3150 L890,3170 L875,3190 L914,3150 L946,3126 L985,3114 L1009,3160 L1012,3210 L1004,3254 L961,3270 L922,3230 L901,3214 L875,3204 L827,3210 L783,3254 L796,3290 L895,3294 L851,3330 L780,3360 L756,3440 L760,3510 L709,3600 L678,3660 L701,3684 L646,3710 L536,3730 L410,3820 L397,3872 L391,3988 L504,4080 L678,4120 L646,4250 L552,4400 L362,4560 L284,4700 L268,4720 L165,5020 L260,5166"/>
+      <path d="M221,5230 L284,5310 L362,5460 L536,5600 L756,5640 L725,5690 L504,5690 L221,5680"/>
+      <path d="M2963,710 L2955,770 L2923,840 L2876,910 L2840,980 L2805,1040 L2818,1110 L2845,1070 L2908,980 L2979,910 L3034,830 L3045,770 L3010,740 Z"/>
+      <path d="M2750,1150 L2703,1190 L2656,1250 L2608,1310 L2588,1370 L2613,1396 L2648,1344 L2687,1284 L2726,1224 L2766,1176 Z"/>
+      <path d="M1371,5000 L1481,4950 L1592,4970 L1639,5040 L1600,5140 L1513,5140 L1403,5080 Z"/>
+      <path d="M1671,4980 L1812,4960 L1931,5010 L1875,5070 L1828,5150 L1734,5170 L1686,5100 L1718,5050 Z"/>
+      <path d="M5035,5500 L5106,5510 L5169,5506 L5232,5530 L5287,5554 L5327,5590 L5374,5620 L5390,5664 L5343,5676 L5295,5644 L5232,5600 L5169,5560 L5106,5540 L5043,5520 Z"/>
+      <circle cx="2383" cy="1706" r="2.5"/>
+      <!-- Olas en toda la costa: cada tramo arranca corrido hacia su mar (--dx, --dy) y llega a la orilla; las islas, en anillo. -->
+      <use class="swell" href="#c-uy" style="--dx:0px;--dy:36px"/>
+      <use class="swell" href="#c-uy" style="--dx:0px;--dy:36px;animation-delay:-3s"/>
+      <use class="swell" href="#c-uy" style="--dx:0px;--dy:36px;animation-delay:-6s"/>
+      <use class="foam" href="#c-uy"/>
+      <use class="swell" href="#c-br" style="--dx:24px;--dy:16px"/>
+      <use class="swell" href="#c-br" style="--dx:24px;--dy:16px;animation-delay:-3s"/>
+      <use class="swell" href="#c-br" style="--dx:24px;--dy:16px;animation-delay:-6s"/>
+      <use class="foam" href="#c-br"/>
+      <use class="swell" href="#c-plata" style="--dx:14px;--dy:-26px"/>
+      <use class="swell" href="#c-plata" style="--dx:14px;--dy:-26px;animation-delay:-3s"/>
+      <use class="swell" href="#c-plata" style="--dx:14px;--dy:-26px;animation-delay:-6s"/>
+      <use class="foam" href="#c-plata"/>
+      <use class="swell" href="#c-samborombon" style="--dx:30px;--dy:6px"/>
+      <use class="swell" href="#c-samborombon" style="--dx:30px;--dy:6px;animation-delay:-3s"/>
+      <use class="swell" href="#c-samborombon" style="--dx:30px;--dy:6px;animation-delay:-6s"/>
+      <use class="foam" href="#c-samborombon"/>
+      <use class="swell" href="#c-bonaerense" style="--dx:6px;--dy:30px"/>
+      <use class="swell" href="#c-bonaerense" style="--dx:6px;--dy:30px;animation-delay:-3s"/>
+      <use class="swell" href="#c-bonaerense" style="--dx:6px;--dy:30px;animation-delay:-6s"/>
+      <use class="foam" href="#c-bonaerense"/>
+      <use class="swell" href="#c-patagonia" style="--dx:30px;--dy:10px"/>
+      <use class="swell" href="#c-patagonia" style="--dx:30px;--dy:10px;animation-delay:-3s"/>
+      <use class="swell" href="#c-patagonia" style="--dx:30px;--dy:10px;animation-delay:-6s"/>
+      <use class="foam" href="#c-patagonia"/>
+      <use class="swell" href="#c-tdf" style="--dx:20px;--dy:25px"/>
+      <use class="swell" href="#c-tdf" style="--dx:20px;--dy:25px;animation-delay:-3s"/>
+      <use class="swell" href="#c-tdf" style="--dx:20px;--dy:25px;animation-delay:-6s"/>
+      <use class="foam" href="#c-tdf"/>
+      <use class="swell ring" href="#c-gm"/>
+      <use class="swell ring" href="#c-gm" style="animation-delay:-3s"/>
+      <use class="swell ring" href="#c-gm" style="animation-delay:-6s"/>
+      <use class="foam" href="#c-gm"/>
+      <use class="swell ring" href="#c-so"/>
+      <use class="swell ring" href="#c-so" style="animation-delay:-3s"/>
+      <use class="swell ring" href="#c-so" style="animation-delay:-6s"/>
+      <use class="foam" href="#c-so"/>
+      <use class="swell ring" href="#c-sg"/>
+      <use class="swell ring" href="#c-sg" style="animation-delay:-3s"/>
+      <use class="swell ring" href="#c-sg" style="animation-delay:-6s"/>
+      <use class="foam" href="#c-sg"/>
+    </g>
+    <g class="coords">
+      <!-- Etiquetas con desplazamientos en em: no se pisan con el zoom de la cámara. -->
+      <circle cx="3365" cy="340" r="2"/><text x="3365" y="340" text-anchor="end"><tspan dx="-.8em" dy="-.3em">Santa Catarina · cría</tspan><tspan x="3365" dx="-.8em" dy="1.3em">28°14′S 48°40′O</tspan></text>
+      <circle cx="2556" cy="1580" r="2"/><text x="2556" y="1580"><tspan dx="2.6em" dy="1.1em">Rocha · Cabo Polonio</tspan><tspan x="2556" dx="2.6em" dy="1.3em">34°24′S 53°47′O</tspan></text>
+      <circle cx="2372" cy="1694" r="2"/><text x="2372" y="1694" text-anchor="middle"><tspan dy="2em">Punta del Este</tspan><tspan x="2372" dy="1.3em">34°58′S 54°57′O</tspan></text>
+      <circle cx="2181" cy="1688" r="2"/><text x="2181" y="1688" text-anchor="middle"><tspan dy="2em">Montevideo</tspan><tspan x="2181" dy="1.3em">34°54′S 56°10′O</tspan></text>
+      <circle cx="1962" cy="2300" r="2"/><text x="1962" y="2300" text-anchor="end"><tspan dx="-.8em" dy="-.3em">Mar del Plata</tspan><tspan x="1962" dx="-.8em" dy="1.3em">38°00′S 57°33′O</tspan></text>
+      <circle cx="961" cy="3180" r="2"/><text x="961" y="3180"><tspan dx="5em" dy="-.6em">Península Valdés · cría</tspan><tspan x="961" dx="5em" dy="1.3em">42°30′S 64°00′O</tspan></text>
+      <circle cx="783" cy="3254" r="2"/><text x="783" y="3254" text-anchor="end"><tspan dx="-.8em" dy="-.3em">Puerto Madryn · Golfo Nuevo</tspan><tspan x="783" dx="-.8em" dy="1.3em">42°46′S 65°02′O</tspan></text>
+      <text x="1620" y="5180" text-anchor="middle"><tspan dy="1.6em">Islas Malvinas</tspan><tspan x="1620" dy="1.3em">51°45′S 59°00′O</tspan></text>
+      <text x="5200" y="5690" text-anchor="middle"><tspan dy="1.6em">Georgias del Sur · alimentación</tspan><tspan x="5200" dy="1.3em">54°17′S 36°30′O</tspan></text>
+    </g>
+    <g class="route">
+      <path id="route" d="M3436,360 C3415,400 3363,513 3310,600 C3257,687 3188,787 3120,880 C3052,973 2971,1070 2900,1160 C2829,1250 2750,1348 2695,1420 C2640,1492 2606,1548 2569,1590 C2532,1632 2507,1645 2474,1670 C2441,1695 2414,1715 2372,1740 C2330,1765 2259,1780 2222,1820 C2185,1860 2168,1923 2151,1980 C2134,2037 2141,2095 2120,2160 C2099,2225 2087,2310 2025,2370 C1963,2430 1848,2478 1749,2520 C1651,2562 1526,2570 1434,2620 C1342,2670 1256,2753 1198,2820 C1140,2887 1109,2960 1087,3020 C1065,3080 1081,3135 1064,3180 C1047,3225 1021,3276 985,3290 C950,3304 856,3265 851,3264 C846,3263 914,3255 953,3284 C992,3313 1036,3384 1087,3440 C1138,3496 1174,3533 1261,3620 C1348,3707 1472,3813 1608,3960 C1745,4107 1954,4357 2080,4500 C2206,4643 2185,4707 2364,4820 C2543,4933 2863,5083 3152,5180 C3441,5277 3799,5353 4098,5400 C4398,5447 4807,5450 4949,5460"/>
+      <text dy="1.6em"><textPath href="#route-label" startOffset="24%">Ballena franca austral · ruta de migración</textPath></text>
+      <path id="whale" class="whale" d="M50,86 C26,77 6,53 4,21 C3,12 11,10 19,18 C36,36 47,57 50,70 C53,57 64,36 81,18 C89,10 97,12 96,21 C94,53 74,77 50,86 Z"/>
+    </g>
+  </g>
+</svg>
 
 <header class="wrap">
   <nav aria-label="Principal">
@@ -413,37 +502,6 @@ footer .geo { margin-left: auto; font-family: var(--mono); font-size: 12px; }
 <main>
 <section class="hero">
   <div class="motif" aria-hidden="true">
-    <!-- x = (lon + 58) * 300, y = (-lat - 33.7) * 300 -->
-    <svg class="motif-costa map" viewBox="0 0 1440 600" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round">
-      <defs>
-        <!-- Ruta de la ballena franca austral: llega del sur entre junio y noviembre y sigue la costa hacia Brasil. -->
-        <path id="route" d="M900,600 C905,470 940,410 1000,392 S1110,340 1160,318 S1250,262 1300,205 S1385,80 1440,-10"/>
-        <path id="coast" d="M45,231 L90,225 L130,214 L171,219 L205,228 L240,240 L272,258 L300,276 L340,290 L381,300 L425,316 L465,330 L495,330 L512,342 L525,354 L537,357 L545,366 L552,372 L561,366 L570,363 L591,357 L612,350 L630,339 L652,330 L672,324 L700,326 L735,327 L768,333 L795,342 L812,350 L819,354 L850,360 L885,366 L900,360 L909,372 L915,381 L924,375 L945,363 L975,355 L1011,345 L1040,334 L1065,324 L1092,308 L1116,294 L1135,290 L1152,291 L1170,282 L1185,270 L1206,252 L1230,234 L1250,222 L1266,210 L1278,196 L1290,180 L1305,152 L1320,126 L1338,102 L1352,80 L1365,60 L1378,38 L1389,15"/>
-      </defs>
-      <g class="land">
-        <use href="#coast"/>
-        <circle cx="938" cy="398" r="2.5"/>
-        <!-- Olas: copias de la costa que llegan desde el mar (abajo) y rompen. -->
-        <use class="swell" href="#coast"/>
-        <use class="swell" href="#coast" style="animation-delay:-3s"/>
-        <use class="swell" href="#coast" style="animation-delay:-6s"/>
-        <use class="foam" href="#coast"/>
-      </g>
-      <g class="coords">
-        <circle cx="549" cy="363" r="2"/><text x="549" y="388" text-anchor="middle">34°54′S 56°10′O</text>
-        <circle cx="915" cy="381" r="2"/><text x="905" y="404" text-anchor="end">34°58′S 54°57′O</text>
-        <circle cx="1152" cy="291" r="2"/><text x="1140" y="284" text-anchor="end">34°40′S 54°10′O</text>
-      </g>
-      <g class="route">
-        <use href="#route"/>
-        <text dy="16"><textPath href="#route" startOffset="47%">Ballena franca austral · jun–nov</textPath></text>
-        <g class="whale">
-          <path transform="rotate(-90) scale(.22) translate(-50,-50)" d="M50,86 C26,77 6,53 4,21 C3,12 11,10 19,18 C36,36 47,57 50,70 C53,57 64,36 81,18 C89,10 97,12 96,21 C94,53 74,77 50,86 Z"/>
-          <animateMotion dur="40s" repeatCount="indefinite" rotate="auto"><mpath href="#route"/></animateMotion>
-          <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.2;.9;1" dur="40s" repeatCount="indefinite"/>
-        </g>
-      </g>
-    </svg>
     <svg class="motif-fluke" viewBox="0 0 100 100" stroke-width="1.25">
       <path d="M50,86 C26,77 6,53 4,21 C3,12 11,10 19,18 C36,36 47,57 50,70 C53,57 64,36 81,18 C89,10 97,12 96,21 C94,53 74,77 50,86 Z"/>
     </svg>
@@ -637,32 +695,6 @@ footer .geo { margin-left: auto; font-family: var(--mono); font-size: 12px; }
 </section>
 
 <div class="south">
-  <!-- x = (lon + 66.5) * 111, y = (-lat - 34.6) * 157 -->
-  <svg class="south-map map" viewBox="0 0 1440 3200" stroke-width="1.25" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">
-    <defs><path id="route-s" d="M1554,2010 C1489,1968 1305,1839 1166,1758 C1027,1677 848,1588 722,1523 C596,1458 472,1408 411,1366 C350,1324 361,1314 355,1272 C349,1230 353,1170 377,1115 C401,1060 454,994 500,942 C546,890 598,840 655,801 C712,762 779,744 844,707 C909,670 995,633 1043,581 C1091,529 1112,451 1132,393 C1153,336 1149,283 1166,236 C1183,189 1214,155 1232,110 C1251,66 1270,-7 1277,-31"/></defs>
-    <g class="land">
-      <path d="M960,-20 L1007,-27 L1084,16 L1142,46 L1148,53 L1192,27 L1247,44 L1282,58 L1318,38 L1370,11 L1412,-31"/>
-      <path d="M890,-16 L902,0 L919,16 L955,39 L999,71 L1038,133 L1018,173 L1012,207 L1027,243 L1055,262 L1082,267 L1088,290 L1090,333 L1071,394 L1060,418 L1038,447 L1010,490 L996,534 L961,576 L861,622 L777,652 L714,669 L577,691 L500,683 L472,659 L488,707 L488,754 L466,824 L483,895 L477,934 L455,989 L411,1010 L344,1028 L278,1021 L189,973 L155,1005 L167,1099 L183,1170 L216,1201 L239,1217 L228,1232 L255,1201 L278,1182 L305,1173 L322,1209 L324,1248 L319,1283 L289,1295 L261,1264 L246,1251 L228,1243 L194,1248 L163,1283 L172,1311 L242,1314 L211,1342 L161,1366 L144,1429 L147,1484 L111,1554 L89,1601 L105,1620 L67,1641 L-11,1656 L-100,1727"/>
-      <path d="M577,2653 L655,2614 L733,2630 L766,2685 L738,2763 L677,2763 L599,2716 Z"/>
-      <path d="M788,2638 L888,2622 L971,2661 L932,2708 L899,2771 L833,2787 L799,2732 L821,2693 Z"/>
-    </g>
-    <g class="coords">
-      <circle cx="993" cy="534" r="2"/><text x="978" y="528" text-anchor="end">38°00′S 57°33′O</text>
-      <circle cx="470" cy="647" r="2"/><text x="470" y="628" text-anchor="middle">38°43′S 62°16′O</text>
-      <circle cx="322" cy="1256" r="2"/><text x="404" y="1236">Península Valdés · cría</text><text x="404" y="1252">42°30′S 64°00′O</text>
-      <text x="775" y="2836" text-anchor="middle">Islas Malvinas</text><text x="775" y="2852" text-anchor="middle">51°45′S 59°00′O</text>
-      <text x="1240" y="1836" text-anchor="end">Georgias del Sur · alimentación →</text><text x="1240" y="1852" text-anchor="end">54°17′S 36°30′O</text>
-    </g>
-    <g class="route">
-      <use href="#route-s"/>
-      <text dy="16"><textPath href="#route-s" startOffset="60%">Ballena franca austral · ruta de migración</textPath></text>
-      <g class="whale">
-        <path transform="rotate(-90) scale(.22) translate(-50,-50)" d="M50,86 C26,77 6,53 4,21 C3,12 11,10 19,18 C36,36 47,57 50,70 C53,57 64,36 81,18 C89,10 97,12 96,21 C94,53 74,77 50,86 Z"/>
-        <animateMotion dur="80s" repeatCount="indefinite" rotate="auto"><mpath href="#route-s"/></animateMotion>
-        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.08;.95;1" dur="80s" repeatCount="indefinite"/>
-      </g>
-    </g>
-  </svg>
 
   <section class="agents-sec">
     <div class="wrap">
@@ -902,8 +934,8 @@ const store = {
   set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
 };
 
-// Tema: oscuro por defecto, claro como toggle.
-if (store.get('theme') === 'light') root.dataset.theme = 'light';
+// Tema: claro por defecto, oscuro como toggle.
+if (store.get('theme') === 'dark') root.dataset.theme = 'dark';
 document.getElementById('theme').onclick = () => {
   root.dataset.theme = root.dataset.theme === 'light' ? 'dark' : 'light';
   store.set('theme', root.dataset.theme);
@@ -931,6 +963,43 @@ const bgBtns = document.querySelectorAll('.draft button');
 const setBg = v => { root.dataset.bg = v; bgBtns.forEach(b => b.setAttribute('aria-pressed', b.dataset.bg === v)); store.set('bg', v); };
 setBg(store.get('bg') || 'costa');
 bgBtns.forEach(b => b.onclick = () => setBg(b.dataset.bg));
+
+// Mapa: la ballena avanza por la ruta según el scroll y la cámara la sigue.
+// Arranca frente a Rocha con zoom sobre Uruguay, se aleja al dejar el hero y otro poco al final.
+// Textos y ballena compensan el zoom para mantener su tamaño en pantalla.
+const world = document.getElementById('world');
+const cam = document.getElementById('cam');
+const route = document.getElementById('route');
+const whale = document.getElementById('whale');
+const total = route.getTotalLength();
+const START = [2556, 1600]; // frente a Cabo Polonio
+let L0 = 0;
+for (let l = 0, best = Infinity; l < total; l += 10) {
+  const p = route.getPointAtLength(l), d = (p.x - START[0]) ** 2 + (p.y - START[1]) ** 2;
+  if (d < best) { best = d; L0 = l; }
+}
+const smoothstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+let ticking = false, lastL = null, dir = 1; // dir: 1 baja por la ruta, -1 vuelve
+const frame = () => {
+  ticking = false;
+  const max = document.documentElement.scrollHeight - innerHeight;
+  const p = max > 0 ? Math.min(1, scrollY / max) : 0;
+  const l = L0 + p * (total - L0 - 1);
+  if (lastL !== null && Math.abs(l - lastL) > 0.5) dir = l > lastL ? 1 : -1;
+  lastL = l;
+  const a = route.getPointAtLength(l), b = route.getPointAtLength(Math.min(total, l + 4));
+  const s = 1.5 - 0.9 * smoothstep(0, 0.2, p) - 0.2 * smoothstep(0.7, 1, p);
+  world.style.setProperty('--fs', 13.5 / s + 'px');
+  const ax = innerWidth * (innerWidth < 720 ? 0.55 : 0.64), ay = innerHeight * 0.46;
+  cam.setAttribute('transform', `translate(${ax - a.x * s} ${ay - a.y * s}) scale(${s})`);
+  // El pedúnculo apunta hacia donde avanza; al scrollear para arriba la ballena se da vuelta.
+  const ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI + (dir < 0 ? 180 : 0);
+  whale.setAttribute('transform', `translate(${a.x} ${a.y}) rotate(${ang - 90}) scale(${0.27 / s}) translate(-50 -50)`);
+};
+const queue = () => { if (!ticking) { ticking = true; requestAnimationFrame(frame); } };
+addEventListener('scroll', queue, { passive: true });
+addEventListener('resize', queue);
+frame();
 </script>
 </body>
 </html>
